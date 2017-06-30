@@ -99,23 +99,18 @@ def add_appointment(request):
     Appointment.objects.create(user_id=(User.objects.get(pk=request.session['current_user'])), name=request.POST['name'], status="Pending", date=request.POST['date'], time=request.POST['time'])  
     return redirect('/display_appointments')
 
-def update_appointment(request):
-    check = True
-    if len(request.POST['date']) < 8:
-        messages.error(request, "Please enter a valid date")
-        check = False
-    elif datetime.datetime.strptime(request.POST['date'], '%Y-%m-%d').date() < datetime.datetime.now().date():
-        messages.error(request, "Date must be today or future date") 
-        check = False        
-    if len(request.POST['time']) < 4:
-        messages.error(request, "Please enter a valid time")
-        check = False    
-    if len(request.POST['name']) < 1:
-        messages.error(request, "Please enter a task")
-        check = False
-    if not check:
-        return redirect('/display_appointments')
-
+def update_appointment(request, id):
+        if request.method == 'POST':
+            
+            context = {
+            "appointment" : Appointment.objects.get(id=id)
+            }  
+        
+            appointment = Appointment.objects.get(id=id)
+            appointment.status = request.POST['status']
+            appointment.save()
+            return redirect('/display_appointments', context)
+    
 def edit(request, id):
     context = {
         "appointment" : Appointment.objects.get(id=id),
