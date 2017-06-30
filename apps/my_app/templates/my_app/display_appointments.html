@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Hello, {{ user.name }}!</h1>
+    <a href="/logout">Logout</a>
+    <h2>Here are your appointments for today, {{ today }}</h2>
+    <table>
+        <tr>
+            <th>Tasks</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for appointment in appointments_today %}
+        <tr>
+            <td>{{ appointment.name }}</td>
+            <td>{{ appointment.time }}</td>
+            <td>{{ appointment.status }}</td>
+            <!--<form action="/appointments/{{ task.id }}/delete" method="post">
+                    {% csrf_token %}
+                    <input class="delete-button" type="submit" value="DELETE">
+            </form>-->
+            {% if appointment.status == 'Pending' %}
+            <td> <a href="/edit/{{ appointment.id }}">Edit</a> <a href="/delete/{{ appointment.id }}">Delete</a></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+    <h2>Your Other appointments:</h2>
+    <table>
+        <tr>
+            <th>Tasks</th>
+            <th>Date</th>
+            <th>Time</th>
+        </tr>
+        {% for appointment in appointments_future %}
+        <tr>
+            <td>{{ appointment.name }}</td>
+            <td>{{ appointment.date }}</td>
+            <td>{{ appointment.time }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h2>Add Appointment:</h2>
+    <form action="/add_appointment" method="post">
+        {% csrf_token %}
+        <label for="date">Date:</label>
+        <input type="date" name="date" id="date"><br>
+        <label for="time">Time:</label>
+        <input type="time" name="time" id="time"><br>
+        <label for="name">Tasks:</label>
+        <input type="text" name="name" id="name"><br>
+        <button>Add</button>
+    </form>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>
+            <h2>{{ message }}</h2>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</body>
+
+</html>
