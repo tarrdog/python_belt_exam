@@ -64,7 +64,7 @@ def display_appointments(request):
             "user" : User.objects.get(pk=request.session['current_user']),
             "today" : datetime.datetime.now().date(),
             "appointments_today" : Appointment.objects.filter(user_id=User.objects.get(pk=request.session['current_user'])).filter(date=datetime.datetime.now().date()).order_by('time'),
-            "appointments_future" : Appointment.objects.filter(user_id=User.objects.get(pk=request.session['current_user'])).exclude(date=datetime.datetime.now().date()).order_by('date').order_by('time'),
+            "appointments_future" : Appointment.objects.filter(user_id=User.objects.get(pk=request.session['current_user'])).exclude(date=datetime.datetime.now().date()).order_by('date'),
             "appointments" : Appointment.objects.all()
         }
         return render(request, 'my_app/display_appointments.html', context)
@@ -100,17 +100,37 @@ def add_appointment(request):
     return redirect('/display_appointments')
 
 def update_appointment(request, id):
-        if request.method == 'POST':
-            
-            context = {
-            "appointment" : Appointment.objects.get(id=id)
-            }  
-        
-            appointment = Appointment.objects.get(id=id)
-            appointment.status = request.POST['status']
-            appointment.save()
-            return redirect('/display_appointments', context)
-    
+    check = True
+    if len(request.POST['date']) < 6:
+        messages.error(request, "Please enter a valid date")
+        check = False
+    elif datetime.datetime.strptime(request.POST['date'], '%Y-%m-%d').date() < datetime.datetime.now().date():
+        messages.error(request, "Date must be today or a future date") 
+        check = False        
+    if len(request.POST['time']) < 4:
+        messages.error(request, "Please enter a valid time (e.g., 10:00 AM)")
+        check = False    
+    if len(request.POST['name']) < 1:
+        messages.error(request, "Please enter a task")
+        check = False
+        return redirect('/')
+    if not check:
+        return redirect('/edit/'+ str(Appointment.objects.get(id=id).id))
+    try:
+        Appointment.objects.exclude(id=id).get(time=request.POST['time'], date=request.POST['date'])
+    except ObjectDoesNotExist:
+        then = True
+    else:
+        messages.error("You have another appointment at this time, please select another time")
+        return redirect('/edit/'+ str(Appointment.objects.get(id=id).id))       
+    appointment = Appointment.objects.get(id=id)
+    appointment.name = request.POST['name']   
+    appointment.status = request.POST['status']
+    appointment.date = request.POST['date']
+    appointment.time = request.POST['time']
+    appointment.save()
+    return redirect('/display_appointments')
+
 def edit(request, id):
     context = {
         "appointment" : Appointment.objects.get(id=id),
